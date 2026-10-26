@@ -509,3 +509,110 @@ else:
     st.info("No applications found. Add one above or change your filters.")
 
 st.caption("Your applications are stored in your Supabase database.")
+
+# ----------------------------------------
+# JOB OFFER ANALYZER
+# ----------------------------------------
+
+st.divider()
+st.subheader("🤖 Job Offer Analyzer")
+st.write(
+    "Paste a job offer and compare its required skills "
+    "with your own profile."
+)
+
+job_offer = st.text_area(
+    "Paste the job offer here",
+    height=220,
+    placeholder="Paste the job description..."
+)
+
+profile_skills = st.text_input(
+    "Your skills",
+    placeholder="Excel, accounting, financial analysis, Power BI..."
+)
+
+profile_experience = st.text_area(
+    "Your experience",
+    placeholder="Describe your studies, internships or work experience..."
+)
+
+if st.button("Analyze job offer"):
+    if not job_offer.strip():
+        st.warning("Please paste a job offer first.")
+    elif not profile_skills.strip():
+        st.warning("Please enter your skills first.")
+    else:
+        skills_list = [
+            "Excel",
+            "Accounting",
+            "Financial analysis",
+            "Budgeting",
+            "Reporting",
+            "Power BI",
+            "Python",
+            "Communication",
+            "Project management",
+            "Data analysis",
+            "Financial modeling",
+            "Management control",
+            "English"
+        ]
+
+        offer_lower = job_offer.lower()
+        profile_lower = profile_skills.lower()
+
+        required_skills = [
+            skill for skill in skills_list
+            if skill.lower() in offer_lower
+        ]
+
+        matching_skills = [
+            skill for skill in required_skills
+            if skill.lower() in profile_lower
+        ]
+
+        missing_skills = [
+            skill for skill in required_skills
+            if skill.lower() not in profile_lower
+        ]
+
+        st.subheader("📊 Analysis results")
+
+        if required_skills:
+            st.write("**Skills identified in the job offer:**")
+            st.write(", ".join(required_skills))
+
+            st.write("**Skills matching your profile:**")
+            if matching_skills:
+                st.success(", ".join(matching_skills))
+            else:
+                st.info("No matching skills found in your profile.")
+
+            st.write("**Skills to develop:**")
+            if missing_skills:
+                st.warning(", ".join(missing_skills))
+            else:
+                st.success("All identified skills match your profile.")
+        else:
+            st.info(
+                "No skills from the predefined list were detected. "
+                "Try an offer with more detailed requirements."
+            )
+
+        if profile_experience.strip():
+            st.subheader("🎯 Interview preparation")
+            st.write(
+                "Prepare examples from your experience that demonstrate "
+                "your skills and explain how you used them."
+            )
+            st.write(
+                "Review the requirements that were not found in your "
+                "profile and prepare an honest answer about your current "
+                "level and willingness to learn."
+            )
+
+        st.caption(
+            "This first version uses predefined keywords. "
+            "It does not use a generative AI model."
+        )
