@@ -251,6 +251,47 @@ with st.form("application_form", clear_on_submit=True):
 # --------------------------------------------------
 
 st.divider()
+
+# ----------------------------------------
+# KANBAN BOARD
+# ----------------------------------------
+
+st.subheader("🗂️ Kanban board")
+st.caption("Track your applications by recruitment stage.")
+
+kanban_statuses = [
+    "To apply",
+    "Applied",
+    "Interview",
+    "Offer",
+    "Rejected"
+]
+
+kanban_icons = ["📝", "📨", "🎤", "🎉", "❌"]
+
+kanban_columns = st.columns(5)
+
+for column, status, icon in zip(
+    kanban_columns, kanban_statuses, kanban_icons
+):
+    with column:
+        matching = [
+            app for app in applications
+            if app["status"] == status
+        ]
+
+        st.markdown(f"**{icon} {status} ({len(matching)})**")
+
+        for app in matching:
+            with st.container(border=True):
+                st.markdown(f"**{app['company']}**")
+                st.caption(app["position"])
+
+        if not matching:
+            st.caption("No applications")
+
+st.divider()
+
 st.subheader("📋 My applications")
 
 col1, col2 = st.columns(2)
