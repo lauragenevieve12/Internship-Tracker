@@ -128,6 +128,33 @@ c4.metric("Offers", offers)
 c5.metric("Rejected", rejected)
 c6.metric("To apply", to_apply)
 
+# ADVANCED STATISTICS
+st.divider()
+st.subheader("📈 Advanced statistics")
+
+# Response rate: applications with a response
+responded = interviews + offers + rejected
+response_rate = (responded / total * 100) if total > 0 else 0
+
+# Interview rate: applications that reached interview or offer
+interview_rate = ((interviews + offers) / total * 100) if total > 0 else 0
+
+stat1, stat2 = st.columns(2)
+stat1.metric("Response rate", f"{response_rate:.1f}%")
+stat2.metric("Interview / offer rate", f"{interview_rate:.1f}%")
+
+# Number of applications by status
+status_counts = {
+    "To apply": to_apply,
+    "Applied": sent,
+    "Interview": interviews,
+    "Offer": offers,
+    "Rejected": rejected,
+}
+
+st.write("**Applications by status**")
+st.bar_chart(status_counts)
+
 
 # --------------------------------------------------
 # FOLLOW-UP REMINDERS
