@@ -150,23 +150,40 @@ status_icons = {
 }
 
 if filtered:
-    display_data = []
     for a in filtered:
-        display_data.append({
-            "Company": a["company"],
-            "Position": a["position"],
-            "Application date": a["application_date"],
-            "Status": status_icons.get(a["status"], a["status"]),
-            "Follow-up": a.get("follow_up_date") or "—",
-            "Notes": a.get("notes") or "—"
-        })
+        with st.container(border=True):
+            col1, col2 = st.columns([4, 1])
 
-    st.dataframe(
-        pd.DataFrame(display_data),
-        use_container_width=True,
-        hide_index=True
-    )
+            with col1:
+                st.subheader(a["company"])
+                st.write(f"**Position:** {a['position']}")
+                st.write(f"**Application date:** {a['application_date']}")
+                st.write(f"**Status:** {status_icons.get(a['status'], a['status'])}")
+                st.write(f"**Follow-up:** {a.get('follow_up_date') or '-'}")
+                st.write(f"**Notes:** {a.get('notes') or '-'}")
+
+            with col2:
+                if st.button("🗑️ Delete", key=f"delete_{a['id']}"):
+                    st.session_state[f"confirm_delete_{a['id']}"] = True
+
+            if st.session_state.get(f"confirm_delete_{a['id']}", False):
+                st.warning(f"Delete the application for {a['company']}?")
+                yes, no = st.columns(2)
+
+                with yes:
+                    if st.button("Yes, delete", key=f"yes_{a['id']}"):
+                        supabase.table("applications").delete().eq(
+                            "id", a["id"]
+                        ).execute()
+                        st.session_state.pop(f"confirm_delete_{a['id']}", None)
+                        st.rerun()
+
+                with no:
+                    if st.button("Cancel", key=f"no_{a['id']}"):
+                        st.session_state.pop(f"confirm_delete_{a['id']}", None)
+                        st.rerun()
 else:
     st.info("No applications found. Add one above or change your filters.")
 
+st.caption("Your applications are stored in your Supabase database.")
 st.caption("Your applications are stored in your Supabase database.")
