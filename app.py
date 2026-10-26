@@ -149,22 +149,86 @@ status_icons = {
     "Offer": "🟢 Offer"
 }
 
+
 if filtered:
     for a in filtered:
         with st.container(border=True):
-            col1, col2 = st.columns([4, 1])
+            col1, col2, col3 = st.columns([3, 1, 1])
 
             with col1:
                 st.subheader(a["company"])
                 st.write(f"**Position:** {a['position']}")
                 st.write(f"**Application date:** {a['application_date']}")
-                st.write(f"**Status:** {status_icons.get(a['status'], a['status'])}")
+                st.write(
+                    f"**Status:** {status_icons.get(a['status'], a['status'])}"
+                )
                 st.write(f"**Follow-up:** {a.get('follow_up_date') or '-'}")
                 st.write(f"**Notes:** {a.get('notes') or '-'}")
 
             with col2:
+                if st.button("✏️ Edit", key=f"edit_{a['id']}"):
+                    st.session_state["editing_id"] = a["id"]
+                    st.rerun()
+
+            with col3:
                 if st.button("🗑️ Delete", key=f"delete_{a['id']}"):
                     st.session_state[f"confirm_delete_{a['id']}"] = True
+
+            if st.session_state.get("editing_id") == a["id"]:
+                st.markdown("### Edit application")
+
+                with st.form(key=f"edit_form_{a['id']}"):
+                    new_company = st.text_input(
+                        "Company name", value=a["company"]
+                    )
+                    new_position = st.text_input(
+                        "Position", value=a["position"]
+                    )
+                    new_status = st.selectbox(
+                        "Status",
+                        ["To apply", "Applied", "Interview", "Rejected", "Offer"],
+                        index=[
+                            "To apply", "Applied", "Interview",
+                            "Rejected", "Offer"
+                        ].index(a["status"])
+                    )
+                    new_follow_up = st.date_input(
+                        "Follow-up date (optional)",
+                        value=(
+                            date.fromisoformat(a["follow_up_date"])
+                            if a.get("follow_up_date")
+                            else None
+                        )
+                    )
+                    new_notes = st.text_area(
+                        "Notes", value=a.get("notes") or ""
+                    )
+
+                    save_edit = st.form_submit_button("Save changes")
+                    cancel_edit = st.form_submit_button("Cancel")
+
+                if save_edit:
+                    if new_company.strip() and new_position.strip():
+                        supabase.table("applications").update({
+                            "company": new_company.strip(),
+                            "position": new_position.strip(),
+                            "status": new_status,
+                            "follow_up_date": (
+                                new_follow_up.isoformat()
+                                if new_follow_up else None
+                            ),
+                            "notes": new_notes.strip()
+                        }).eq("id", a["id"]).execute()
+
+                        st.session_state.pop("editing_id", None)
+                        st.success("Application updated!")
+                        st.rerun()
+                    else:
+                        st.error("Please enter the company and position.")
+
+                if cancel_edit:
+                    st.session_state.pop("editing_id", None)
+                    st.rerun()
 
             if st.session_state.get(f"confirm_delete_{a['id']}", False):
                 st.warning(f"Delete the application for {a['company']}?")
@@ -175,15 +239,22 @@ if filtered:
                         supabase.table("applications").delete().eq(
                             "id", a["id"]
                         ).execute()
-                        st.session_state.pop(f"confirm_delete_{a['id']}", None)
+                        st.session_state.pop(
+                            f"confirm_delete_{a['id']}", None
+                        )
                         st.rerun()
 
                 with no:
                     if st.button("Cancel", key=f"no_{a['id']}"):
-                        st.session_state.pop(f"confirm_delete_{a['id']}", None)
+                        st.session_state.pop(
+                            f"confirm_delete_{a['id']}", None
+                        )
                         st.rerun()
 else:
     st.info("No applications found. Add one above or change your filters.")
+
+st.caption("Your applications are stored in your Supabase database.")
+
 
 st.caption("Your applications are stored in your Supabase database.")
 st.caption("Your applications are stored in your Supabase database.")
